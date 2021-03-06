@@ -3,6 +3,8 @@
 
 exports
 test.html
+log.txt
+*db.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

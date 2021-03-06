@@ -4,6 +4,7 @@ warnings.filterwarnings(action="ignore")
 
 import os
 import re
+import json
 import requests
 
 from typing import List
@@ -22,22 +23,18 @@ def scrape_page(player: str, url: str):
     segments = create_html_segments(page)
 
     for i, segment in enumerate(segments):
-        print(i)
-        
         proceed = True
-        
-        # try: 
-        soup = BeautifulSoup(segment)
-        session_id = get_session_id(soup)
+        try: 
+            soup = BeautifulSoup(segment)
+            session_id = get_session_id(soup)
 
-        session = create_session(player, session_id, soup)
-        recordings = create_recordings(player, session_id, soup)
-        players = create_players(player, session_id, soup, recordings.recording_id.max())
-        releases = create_releases(player, session_id, soup)
-
-        # except:
-        #     proceed = False
-        #     print(i)
+            session = create_session(player, session_id, soup)
+            recordings = create_recordings(player, session_id, soup)
+            players = create_players(player, session_id, soup, recordings.recording_id.max())
+            releases = create_releases(player, session_id, soup)
+        except:
+            proceed = False
+            print("FAIL", player, i)
 
         if proceed:
             session.to_csv(f"exports/SESSION__{player}__{session_id}.csv", index=False)
@@ -130,7 +127,13 @@ def create_releases(player, session_id, soup):
 
 
 if __name__ == '__main__':
-    player = "Cannonball Adderley"
-    url = "https://www.jazzdisco.org/cannonball-adderley/discography/"
+    urls = json.load(open("urls.json"))
 
-    scrape_page(player, url)
+    for player, url in urls.items():
+        print("Trying", player, "...")
+        request = requests.get(url)
+        if request.status_code == 200:
+            scrape_page(player, url)
+        else:
+            print("PAGE NOT EXISTS")
+
